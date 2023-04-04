@@ -15,6 +15,7 @@
  * @template {Passable} [T=Passable]
  * @typedef {import('@endo/pass-style').CopyArray<T>} CopyArray
  */
+/** @typedef {import('@endo/pass-style').CopyBytes} CopyBytes */
 /** @typedef {import('@endo/pass-style').Checker} Checker */
 /** @typedef {import('@endo/marshal').RankCompare} RankCompare */
 /** @typedef {import('@endo/marshal').RankCover} RankCover */

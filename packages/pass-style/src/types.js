@@ -8,7 +8,7 @@ export {};
 
 /**
  * @typedef { PrimitiveStyle |
- *   'copyRecord' | 'copyArray' | 'tagged' |
+ *   'copyRecord' | 'copyArray' | 'copyBytes' | 'tagged' |
  *   'remotable' |
  *   'error' | 'promise'
  * } PassStyle
@@ -29,6 +29,7 @@ export {};
  *     | 'string' | 'symbol').
  *   * Containers aggregate other Passables into
  *     * sequences as CopyArrays (PassStyle 'copyArray'), or
+ *     * sequences of 8-bit bytes (PassStyle 'copyBytes'), or
  *     * string-keyed dictionaries as CopyRecords (PassStyle 'copyRecord'), or
  *     * higher-order types as CopyTaggeds (PassStyle 'tagged').
  *   * PassableCaps (PassStyle 'remotable' | 'promise') expose local values to
@@ -53,10 +54,9 @@ export {};
  *
  * A Passable is PureData when its entire data structure is free of PassableCaps
  * (remotables and promises) and error objects.
- * PureData is an arbitrary composition of primitive values into CopyArray
- * and/or
- * CopyRecord and/or CopyTagged containers (or a single primitive value with no
- * container), and is fully pass-by-copy.
+ * PureData is an arbitrary composition of primitive values into CopyArray,
+ * CopyBytes, CopyRecord, and/or CopyTagged containers
+ * (or a single primitive value with no container), and is fully pass-by-copy.
  *
  * This restriction assures absence of side effects and interleaving risks *given*
  * that none of the containers can be a Proxy instance.
@@ -91,6 +91,18 @@ export {};
  * @typedef {T[]} CopyArray
  *
  * A Passable sequence of Passable values.
+ */
+
+/**
+ * @typedef {{
+ *   [Symbol.toStringTag]: string,
+ *   byteLength: number,
+ *   slice: (start?: number, end?: number) => ArrayBuffer,
+ * }} CopyBytes
+ * It has the same structural type. But because it is not a builtin ArrayBuffer,
+ * it does not have the same nominal type; meaning, it cannot be used as an
+ * argument where an ArrayBuffer is expected, like the `DataView` or typed
+ * array constructors.
  */
 
 /**
