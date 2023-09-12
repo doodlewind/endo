@@ -7,7 +7,7 @@ import { test } from './prepare-test-env-ava.js';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { fc } from '@fast-check/ava';
 
-import { Far } from '@endo/far';
+import { Remotable } from '@endo/pass-style';
 import { arbPassable } from '@endo/pass-style/tools.js';
 import {
   makeEncodePassable,
@@ -176,7 +176,7 @@ test('capability encoding', t => {
     encodeError: _err => `!${allAscii}`,
   };
 
-  const data = harden([Far('Remotable'), new Promise(() => {}), Error('Foo')]);
+  const data = harden([Remotable(), new Promise(() => {}), Error('Foo')]);
   const decoders = Object.fromEntries(
     Object.entries(encoders).map(([encoderName, encoder], i) => {
       const decoderName = encoderName.replace('encode', 'decode');
