@@ -1,5 +1,5 @@
+import { getMethodNames } from '@endo/eventual-send/src/local.js';
 import { E, Far } from '@endo/far';
-import { hasOwnPropertyOf } from '@endo/pass-style';
 import {
   listDifference,
   objectMap,
@@ -12,7 +12,6 @@ import {
   getInterfaceGuardPayload,
   getCopyMapEntries,
 } from '@endo/patterns';
-
 import { GET_INTERFACE_GUARD } from './get-interface.js';
 
 /** @typedef {import('@endo/patterns').Method} Method */
@@ -354,21 +353,6 @@ const bindMethod = (
 };
 
 /**
- *
- * @template {Record<PropertyKey, CallableFunction>} T
- * @param {T} behaviorMethods
- * @param {InterfaceGuard<{ [M in keyof T]: MethodGuard }>} interfaceGuard
- * @returns {T & import('./get-interface.js').GetInterfaceGuard<T>}
- */
-const withGetInterfaceGuardMethod = (behaviorMethods, interfaceGuard) =>
-  harden({
-    [GET_INTERFACE_GUARD]() {
-      return interfaceGuard;
-    },
-    ...behaviorMethods,
-  });
-
-/**
  * @template {Record<PropertyKey, CallableFunction>} T
  * @param {string} tag
  * @param {ContextProvider} contextProvider
@@ -384,13 +368,20 @@ export const defendPrototype = (
   interfaceGuard = undefined,
 ) => {
   const prototype = {};
-  if (hasOwnPropertyOf(behaviorMethods, 'constructor')) {
-    // By ignoring any method named "constructor", we can use a
+  const methodNames = getMethodNames(behaviorMethods).filter(
+    // By ignoring any method that seems to be a constructor, we can use a
     // class.prototype as a behaviorMethods.
-    const { constructor: _, ...methods } = behaviorMethods;
-    // @ts-expect-error TS misses that hasOwn check makes this safe
-    behaviorMethods = harden(methods);
-  }
+    key => {
+      if (key !== 'constructor') {
+        return true;
+      }
+      const constructor = behaviorMethods.constructor;
+      return !(
+        constructor.prototype &&
+        constructor.prototype.constructor === constructor
+      );
+    },
+  );
   /** @type {Record<PropertyKey, MethodGuard> | undefined} */
   let methodGuards;
   /** @type {import('@endo/patterns').DefaultGuardType} */
@@ -408,10 +399,9 @@ export const defendPrototype = (
       ...(symbolMethodGuards &&
         fromEntries(getCopyMapEntries(symbolMethodGuards))),
     });
+    assert(methodGuards !== undefined);
     defaultGuards = dg;
     {
-      const methodNames = ownKeys(behaviorMethods);
-      assert(methodGuards);
       const methodGuardNames = ownKeys(methodGuards);
       const unimplemented = listDifference(methodGuardNames, methodNames);
       unimplemented.length === 0 ||
@@ -422,12 +412,9 @@ export const defendPrototype = (
           Fail`methods ${q(unguarded)} not guarded by ${q(interfaceName)}`;
       }
     }
-    behaviorMethods = withGetInterfaceGuardMethod(
-      behaviorMethods,
-      interfaceGuard,
-    );
   }
-  for (const prop of ownKeys(behaviorMethods)) {
+
+  for (const prop of methodNames) {
     prototype[prop] = bindMethod(
       `In ${q(prop)} method of (${tag})`,
       contextProvider,
@@ -439,12 +426,22 @@ export const defendPrototype = (
     );
   }
 
-  return Far(
-    tag,
-    /** @type {T & import('./get-interface.js').GetInterfaceGuard<T>} */ (
-      prototype
-    ),
-  );
+  if (interfaceGuard) {
+    const getInterfaceGuardMethod = {
+      [GET_INTERFACE_GUARD]() {
+        return interfaceGuard;
+      },
+    }[GET_INTERFACE_GUARD];
+    prototype[GET_INTERFACE_GUARD] = bindMethod(
+      `In ${q(GET_INTERFACE_GUARD)} method of (${tag})`,
+      contextProvider,
+      getInterfaceGuardMethod,
+      thisfulMethods,
+      undefined,
+    );
+  }
+
+  return Far(tag, /** @type {T} */ (prototype));
 };
 harden(defendPrototype);
 
