@@ -426,9 +426,10 @@ export const defendPrototype = (
     );
   }
 
-  if (interfaceGuard) {
+  if (!hasOwnPropertyOf(prototype, GET_INTERFACE_GUARD)) {
     const getInterfaceGuardMethod = {
       [GET_INTERFACE_GUARD]() {
+        // Note: May be `undefined`
         return interfaceGuard;
       },
     }[GET_INTERFACE_GUARD];
@@ -441,7 +442,12 @@ export const defendPrototype = (
     );
   }
 
-  return Far(tag, /** @type {T} */ (prototype));
+  return Far(
+    tag,
+    /** @type {T & import('./get-interface.js').GetInterfaceGuard<T>} */ (
+      prototype
+    ),
+  );
 };
 harden(defendPrototype);
 

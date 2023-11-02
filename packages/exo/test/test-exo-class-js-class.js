@@ -4,8 +4,6 @@
 import { test } from './prepare-test-env-ava.js';
 
 import { passStyleOf } from '@endo/pass-style';
-// import { M, getInterfaceGuardPayload } from '@endo/patterns';
-// import { defineExoClass, makeExo } from '../src/exo-makers.js';
 import { M, getInterfaceGuardPayload } from '@endo/patterns';
 import { makeExo, defineExoClass } from '../src/exo-makers.js';
 
