@@ -4,6 +4,8 @@
  * The name of the automatically added default meta-method for
  * obtaining an exo's interface, if it has one.
  *
+ * Intended to be similar to `GET_METHOD_NAMES` from `@endo/pass-style`.
+ *
  * TODO Name to be bikeshed. Perhaps even whether it is a
  * string or symbol to be bikeshed.
  *
